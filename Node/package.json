@@ -1,0 +1,20 @@
+{
+  "dependencies": {
+    "fontkit": "^2.0.2",
+    "pdf-lib": "^1.17.1"
+  },
+  "devDependencies": {
+    "webpack": "^5.92.0",
+    "webpack-cli": "^5.1.4"
+  },
+  "name": "writetopdf",
+  "version": "1.0.0",
+  "main": "webpack.config.js",
+  "scripts": {
+    "build": "webpack"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}

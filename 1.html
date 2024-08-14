@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PDF Generator</title>
+  <script src="https://cdn.jsdelivr.net/npm/regenerator-runtime@0.14.1/runtime.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pdf-lib/dist/pdf-lib.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js"></script>
+</head>
+<body>
+    <input type="file" id="file-input" />
+    <button id="modify-pdf">Modify PDF</button>
+
+    <script>
+        const { PDFDocument, rgb, StandardFonts  } = PDFLib;
+
+        async function modifyPdf(existingPdfBytes, textEntries) {
+            // Load an existing PDF document
+            const pdfDoc = await PDFDocument.load(existingPdfBytes);
+
+            // Register the fontkit instance
+            await pdfDoc.registerFontkit(window.fontkit);
+
+            // Load a font
+            const fontUrl = 'https://oleksandrsoft.github.io/Noto_Sans_Devanagari/Hind-Regular.ttf'; // Change this to the URL of your font
+            const fontBytes = await fetch(fontUrl).then(res => res.arrayBuffer());
+            const customFont = await pdfDoc.embedFont(fontBytes);
+
+            // Get the first page of the document
+            const pages = pdfDoc.getPages();
+            const firstPage = pages[0];
+
+            // Set font size and color
+            const fontSize = 12;
+            const color = rgb(0, 0, 0);
+
+            // Write text entries
+            for (const { text, x, y, colorCode, fontSize} of textEntries) {
+                firstPage.drawText(text, {
+                    x: x,
+                    y: firstPage.getHeight() - y - fontSize, // Convert top-left to bottom-left
+                    size: fontSize,
+                    font: customFont,
+                    color: hexToRgb(colorCode),
+                });
+            }
+
+            // Save the modified PDF and trigger download
+            const pdfBytes = await pdfDoc.save();
+            const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'output.pdf';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function hexToRgb(hex) {
+            var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? rgb(parseInt(result[1], 16) / 255, parseInt(result[2], 16) / 255, parseInt(result[3], 16) / 255) : null;
+        }
+
+        document.getElementById('modify-pdf').addEventListener('click', async () => {
+            const fileInput = document.getElementById('file-input');
+            if (fileInput.files.length === 0) {
+                alert('Please select a PDF file.');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const arrayBuffer = await file.arrayBuffer();
+            const textEntries = [
+            { text: 'कल निश्चित रूप से अधिक लागत आएगी!', x: 200, y: 150, colorCode: "#377A34", fontSize: 12},
+            ];
+
+            await modifyPdf(arrayBuffer, textEntries);
+        });
+
+    </script>
+</body>
+</html>
